@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智政通政务智慧治理平台核心技术解析与应用成效</title>
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Preline UI -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/preline/dist/preline.min.css" />
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 配置 TailwindCSS -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Noto Serif SC', 'serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        }
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background-color: rgba(155, 155, 155, 0.5);
+            border-radius: 20px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(155, 155, 155, 0.7);
+        }
+
+        /* 平滑过渡效果 */
+        * {
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+        }
+        
+        /* 卡片悬停效果 */
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 按钮悬停效果 */
+        .btn-hover:hover {
+            transform: scale(1.05);
+        }
+        
+        /* 深色模式文本颜色 */
+        .dark .dark-text {
+            color: #e2e8f0;
+        }
+
+        /* 响应式字体大小 */
+        h1, h2, h3 {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 响应式标题调整 */
+        @media (max-width: 1280px) {
+            h1.text-4xl {
+                font-size: 2.5rem;
+            }
+            h2.text-2xl {
+                font-size: 1.5rem;
+            }
+            h3.text-xl {
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1.text-4xl {
+                font-size: 2rem;
+            }
+            h2.text-2xl {
+                font-size: 1.25rem;
+            }
+            h3.text-xl {
+                font-size: 1.125rem;
+            }
+            .section-title {
+                letter-spacing: -0.02em;
+            }
+        }
+
+        /* 交互组件样式 */
+        .interactive-tab {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .interactive-tab.active {
+            border-color: #0ea5e9;
+            background-color: rgba(14, 165, 233, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .accordion-item {
+            position: relative;
+            overflow: hidden; /* 确保内容不溢出 */
+        }
+        
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            visibility: hidden; /* 添加可见性控制 */
+            opacity: 0; /* 添加透明度过渡 */
+            transition: max-height 0.3s ease, opacity 0.2s ease, visibility 0s 0.3s, padding 0.3s ease; /* 调整过渡效果 */
+            padding-top: 0; /* 收起时清除内边距 */
+            padding-bottom: 0; /* 收起时清除内边距 */
+            box-sizing: border-box;
+        }
+        
+        .accordion-open .accordion-content {
+            max-height: 1000px;
+            visibility: visible;
+            opacity: 1;
+            padding: 0.75rem; /* 展开时恢复内边距 */
+            transition: max-height 0.5s ease, opacity 0.3s ease, visibility 0s, padding 0.3s ease; /* 调整过渡效果 */
+        }
+        
+        .accordion-toggle i {
+            transition: transform 0.3s ease;
+        }
+        
+        .accordion-open .accordion-toggle i {
+            transform: rotate(180deg);
+        }
+
+        /* 交互式提示 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 240px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.75rem;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 下拉菜单样式 */
+        .dropdown-menu {
+            position: absolute;
+            z-index: 30;
+            min-width: 12rem;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 0.5rem;
+            visibility: hidden;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+            pointer-events: none; /* 确保不可点击区域 */
+        }
+        
+        .dropdown-open .dropdown-menu {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto; /* 恢复可点击 */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <!-- 主题切换按钮 -->
+    <button id="theme-toggle" class="fixed top-6 right-6 z-50 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none">
+        <i class="fa-solid fa-sun text-yellow-500 dark:hidden"></i>
+        <i class="fa-solid fa-moon text-blue-300 hidden dark:block"></i>
+    </button>
+
+    <!-- 顶部导航栏 -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-chart-network text-primary-600 dark:text-primary-400 text-2xl mr-3"></i>
+                    <h1 class="text-xl font-semibold text-gray-900 dark:text-white">智政通政务智慧治理平台</h1>
+                </div>
+                <nav class="hidden md:block">
+                    <ul class="flex space-x-8">
+                        <li><a href="#section1" class="text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">税务管理</a></li>
+                        <li><a href="#section2" class="text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">资产治理</a></li>
+                        <li><a href="#section3" class="text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">高净值管理</a></li>
+                        <li><a href="#section4" class="text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">实施成效</a></li>
+                        <li><a href="#section5" class="text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">技术合规</a></li>
+                    </ul>
+                </nav>
+                <!-- 移动端菜单按钮 -->
+                <button id="mobile-menu-button" class="md:hidden text-gray-600 dark:text-gray-300 focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 animate-fade-in">
+            <div class="container mx-auto px-4 py-4">
+                <ul class="space-y-4">
+                    <li><a href="#section1" class="block text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">税务管理</a></li>
+                    <li><a href="#section2" class="block text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">资产治理</a></li>
+                    <li><a href="#section3" class="block text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">高净值管理</a></li>
+                    <li><a href="#section4" class="block text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">实施成效</a></li>
+                    <li><a href="#section5" class="block text-gray-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400">技术合规</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- 首页标题和简介 -->
+        <section class="mb-16 text-center">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-6">智政通政务智慧治理平台</h1>
+            <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-8">核心技术解析与应用成效</h2>
+            <div class="max-w-3xl mx-auto">
+                <p class="text-lg text-gray-600 dark:text-gray-400">
+                    通过技术创新与场景化落地，形成"数据治理-智能决策-价值创造"的政务数字化闭环，
+                    其模块化架构和隐私计算能力为三四线城市提供了可复制的数字化转型样板。
+                </p>
+            </div>
+        </section>
+
+        <!-- 内容导航卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+            <a href="#section1" class="hover-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-chart-pie text-2xl text-primary-600 dark:text-primary-400 mr-3"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">税务管理模块</h3>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">知识图谱、区块链存证与联邦学习的创新应用</p>
+            </a>
+            
+            <a href="#section2" class="hover-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-building text-2xl text-primary-600 dark:text-primary-400 mr-3"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">国有资产治理</h3>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">时空大数据分析与AI混改方案推演系统</p>
+            </a>
+            
+            <a href="#section3" class="hover-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-user-tie text-2xl text-primary-600 dark:text-primary-400 mr-3"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">高净值群体管理</h3>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">CRS数据解析与遗产税预判模型的技术突破</p>
+            </a>
+            
+            <a href="#section4" class="hover-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-chart-line text-2xl text-primary-600 dark:text-primary-400 mr-3"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">实施成效</h3>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">效率提升验证、经济效益量化与创新案例</p>
+            </a>
+            
+            <a href="#section5" class="hover-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-shield-alt text-2xl text-primary-600 dark:text-primary-400 mr-3"></i>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white">技术合规</h3>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400">等保三级强化与模块化演进路径</p>
+            </a>
+            
+            <a href="#" class="hover-card bg-gradient-to-br from-primary-500 to-primary-700 p-6 rounded-xl shadow-md transition-all duration-300">
+                <div class="flex items-center mb-4">
+                    <i class="fa-solid fa-rocket text-2xl text-white mr-3"></i>
+                    <h3 class="text-xl font-semibold text-white">查看全部成果</h3>
+                </div>
+                <p class="text-white/80">探索更多智政通平台的创新实践与应用价值</p>
+            </a>
+        </div>
+
+        <!-- 一、税务管理模块的技术创新与实施效果 -->
+        <section id="section1" class="mb-16 scroll-mt-20">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700 mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                    <i class="fa-solid fa-chart-pie text-primary-600 dark:text-primary-400 mr-3"></i>
+                    一、税务管理模块的技术创新与实施效果
+                </h2>
+                
+                <!-- 知识图谱构建 -->
+                <div class="mb-8 animate-fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary-100 dark:bg-primary-900/30 rounded-lg p-2 mr-3">
+                            <i class="fa-solid fa-diagram-project text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 dark:text-white">知识图谱构建企业-个人-海外关联网络</h3>
+                    </div>
+                    
+                    <!-- 交互式标签页 -->
+                    <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+                        <div class="interactive-tab active py-2 px-4 border-b-2 border-transparent font-medium text-gray-600 dark:text-gray-400" data-tab="architecture">
+                            技术架构
+                        </div>
+                        <div class="interactive-tab py-2 px-4 border-b-2 border-transparent font-medium text-gray-600 dark:text-gray-400" data-tab="application">
+                            行业应用
+                        </div>
+                        <div class="interactive-tab py-2 px-4 border-b-2 border-transparent font-medium text-gray-600 dark:text-gray-400" data-tab="demo">
+                            交互演示
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <!-- 技术架构内容 -->
+                            <div class="tab-content active" id="architecture-content">
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                                    <h4 class="font-medium text-gray-900 dark:text-white mb-2">技术架构</h4>
+                                    <p class="text-gray-600 dark:text-gray-400">
+                                        通过实体抽取（企业法人、股东、关联方）、关系抽取（股权控制、资金流向）构建动态知识网络，
+                                        结合财务、税务、工商、海关等12类数据源形成全域关联图谱。典型案例显示，某省税务局构建的
+                                        三元组知识图谱覆盖4000家企业，穿透识别隐形股东准确率达89%，有效发现跨境关联交易中的转移定价风险。
+                                    </p>
+                                    
+                                    <!-- 交互式问答 -->
+                                    <div class="mt-4 space-y-3">
+                                        <div class="accordion-item border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                            <div class="accordion-toggle flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-800 cursor-pointer">
+                                                <span class="font-medium text-gray-700 dark:text-gray-300">什么是三元组知识图谱？</span>
+                                                <i class="fa-solid fa-chevron-down text-gray-500 dark:text-gray-400"></i>
+                                            </div>
+                                            <div class="accordion-content bg-white dark:bg-gray-800/50 p-3">
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                                                    三元组知识图谱是以"主体-关系-客体"形式构建的知识网络，例如"企业A-控股-企业B"。
+                                                    系统通过自然语言处理技术从非结构化文本中提取实体与关系，构建可视化知识网络，支持复杂查询和推理。
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="accordion-item border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                            <div class="accordion-toggle flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-800 cursor-pointer">
+                                                <span class="font-medium text-gray-700 dark:text-gray-300">如何保障数据安全？</span>
+                                                <i class="fa-solid fa-chevron-down text-gray-500 dark:text-gray-400"></i>
+                                            </div>
+                                            <div class="accordion-content bg-white dark:bg-gray-800/50 p-3">
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                                                    系统采用多层次数据安全保障机制：1) 数据脱敏处理；2) 分级授权访问；
+                                                    3) 操作日志全程留痕；4) 区块链不可篡改存证；5) 安全审计与合规检查。
+                                                    整体符合等保三级要求，有效防止数据泄露和越权访问。
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 行业应用内容 -->
+                            <div class="tab-content" id="application-content">
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                                    <h4 class="font-medium text-gray-900 dark:text-white mb-2">行业应用</h4>
+                                    <p class="text-gray-600 dark:text-gray-400">
+                                        在矿业权转让场景中，知识图谱自动匹配企业历史纳税数据与矿产交易信息，识别异常申报行为，
+                                        助力某资源型城市年增税收1.2亿元。
+                                    </p>
+                                    
+                                    <!-- 客户案例轮播 -->
+                                    <div class="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-3">客户案例</h5>
+                                        
+                                        <div class="relative">
+                                            <div class="case-carousel flex overflow-x-hidden">
+                                                <div class="case-slide flex-shrink-0 w-full">
+                                                    <div class="flex items-center mb-2">
+                                                        <div class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-2">
+                                                            <i class="fa-solid fa-building text-green-600 dark:text-green-400 text-sm"></i>
+                                                        </div>
+                                                        <span class="text-sm font-medium text-gray-900 dark:text-white">某省矿产资源管理局</span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                        "通过知识图谱技术，我们建立了矿权交易全流程可视化监管平台，精准识别异常交易模式，
+                                                        两年内挽回税收损失2.4亿元，监管效率提升86%。"
+                                                    </p>
+                                                </div>
+                                                
+                                                <div class="case-slide flex-shrink-0 w-full hidden">
+                                                    <div class="flex items-center mb-2">
+                                                        <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-2">
+                                                            <i class="fa-solid fa-landmark text-blue-600 dark:text-blue-400 text-sm"></i>
+                                                        </div>
+                                                        <span class="text-sm font-medium text-gray-900 dark:text-white">东部沿海地区税务局</span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                        "知识图谱帮助我们打破数据孤岛，实现跨境关联企业穿透式监管，
+                                                        成功识别并处理25起转移定价避税案件，挽回税款3.9亿元。"
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between">
+                                                <button class="case-prev bg-white dark:bg-gray-700 rounded-full p-1 shadow-md focus:outline-none opacity-70 hover:opacity-100">
+                                                    <i class="fa-solid fa-chevron-left text-gray-600 dark:text-gray-300 text-xs"></i>
+                                                </button>
+                                                <button class="case-next bg-white dark:bg-gray-700 rounded-full p-1 shadow-md focus:outline-none opacity-70 hover:opacity-100">
+                                                    <i class="fa-solid fa-chevron-right text-gray-600 dark:text-gray-300 text-xs"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="flex justify-center mt-2">
+                                                <span class="case-dot w-2 h-2 mx-1 rounded-full bg-primary-600 dark:bg-primary-400"></span>
+                                                <span class="case-dot w-2 h-2 mx-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 交互演示内容 -->
+                            <div class="tab-content" id="demo-content">
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                                    <h4 class="font-medium text-gray-900 dark:text-white mb-2">关联网络交互演示</h4>
+                                    
+                                    <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-sm font-medium text-gray-900 dark:text-white">企业关联分析工具</span>
+                                            <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded">演示版</span>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <div class="relative">
+                                                <input type="text" placeholder="输入企业名称..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 dark:bg-gray-700 dark:text-white text-sm">
+                                                <button class="absolute right-2 top-1/2 -translate-y-1/2 text-primary-600 dark:text-primary-400">
+                                                    <i class="fa-solid fa-search"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="text-center my-3">
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">示例: </span>
+                                                <button class="text-xs text-primary-600 dark:text-primary-400 hover:underline">XXX控股有限公司</button>
+                                                <button class="text-xs text-primary-600 dark:text-primary-400 hover:underline ml-2">YYY投资集团</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg h-40 flex items-center justify-center p-3">
+                                            <div class="text-center">
+                                                <i class="fa-solid fa-chart-network text-3xl text-gray-400 dark:text-gray-500 mb-2"></i>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">点击上方示例企业名称，查看关联网络示意图</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3 text-center">
+                                            <button class="btn-hover inline-flex items-center px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded transition-all duration-300">
+                                                <i class="fa-solid fa-play mr-1 text-xs"></i>
+                                                查看完整演示视频
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 flex flex-col justify-center">
+                            <div class="flex justify-between mb-4">
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">4000+</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">覆盖企业数量</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">89%</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">隐形股东识别准确率</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">1.2亿</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">年增税收（元）</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 交互式图表 -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 text-center mb-4">
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">数据来源分布</h4>
+                                <div class="relative h-36 mx-auto">
+                                    <canvas id="dataSourceChart" width="320" height="144"></canvas>
+                                </div>
+                                <div class="flex flex-wrap justify-center gap-2 mt-2">
+                                    <div class="flex items-center">
+                                        <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                                        <span class="text-xs text-gray-600 dark:text-gray-400">工商 (24%)</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                                        <span class="text-xs text-gray-600 dark:text-gray-400">税务 (38%)</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
+                                        <span class="text-xs text-gray-600 dark:text-gray-400">金融 (18%)</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="inline-block w-2 h-2 rounded-full bg-purple-500 mr-1"></span>
+                                        <span class="text-xs text-gray-600 dark:text-gray-400">海关 (12%)</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
+                                        <span class="text-xs text-gray-600 dark:text-gray-400">其他 (8%)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="w-full bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-gray-600 dark:text-gray-400 italic text-sm">
+                                        "知识图谱技术在税务场景的应用，实现了从单一维度的数据分析到多维立体关联网络的跨越。"
+                                    </p>
+                                    <button class="ml-2 text-primary-600 dark:text-primary-400 tooltip" data-tooltip="查看客户反馈">
+                                        <i class="fa-solid fa-info-circle"></i>
+                                        <span class="tooltip-text">收集自25家客户的满意度评价，平均满意度达到95%，被评为"最具价值数据应用"。</span>
+                                    </button>
+                                </div>
+                                
+                                <button class="mt-3 text-xs text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center">
+                                    申请免费演示 <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 区块链存证技术 -->
+                <div class="mb-8 animate-fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary-100 dark:bg-primary-900/30 rounded-lg p-2 mr-3">
+                            <i class="fa-solid fa-link text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 dark:text-white">区块链存证技术的双重保障</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">不可篡改性</h4>
+                            <p class="text-gray-600 dark:text-gray-400">
+                                采用SHA-256哈希算法和时间戳技术，实现交易数据链式存储，单个节点篡改需同时控制51%以上节点，
+                                某市电子发票系统上线后数据篡改事件归零。
+                            </p>
+                            
+                            <div class="mt-4 flex items-center">
+                                <div class="w-16 h-16 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center">
+                                    <i class="fa-solid fa-shield-alt text-2xl text-white"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-xl font-bold text-gray-900 dark:text-white">数据篡改事件</div>
+                                    <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">归零</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">隐私保护</h4>
+                            <p class="text-gray-600 dark:text-gray-400">
+                                零知识证明技术实现数据可用不可见，宁波市试点中企业财务数据经加密后直接用于申报表生成，
+                                数据调用效率提升70%。
+                            </p>
+                            
+                            <div class="mt-4 flex items-center">
+                                <div class="w-16 h-16 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center">
+                                    <i class="fa-solid fa-tachometer-alt text-2xl text-white"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-xl font-bold text-gray-900 dark:text-white">数据调用效率提升</div>
+                                    <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">70%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 联邦学习 -->
+                <div class="animate-fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary-100 dark:bg-primary-900/30 rounded-lg p-2 mr-3">
+                            <i class="fa-solid fa-brain text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 dark:text-white">联邦学习的跨部门协同</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">隐私计算突破</h4>
+                            <p class="text-gray-600 dark:text-gray-400">
+                                基于同态加密的横向联邦学习模型，实现公安、社保、税务数据的联合建模。某高新区通过跨部门数据协同，
+                                识别高净值人群资产转移行为准确率提升至93%，预警时间提前9个月。
+                            </p>
+                        </div>
+                        
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">动态博弈优化</h4>
+                            <p class="text-gray-600 dark:text-gray-400">
+                                结合图神经网络（GNN）建立多方决策模型，在跨境资金监测中实现风险预测与资源配置同步优化，误报率降低42%。
+                            </p>
+                            
+                            <div class="flex items-center justify-center mt-4">
+                                <div class="text-center mr-10">
+                                    <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">93%</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">识别准确率</div>
+                                </div>
+                                <div class="text-center mr-10">
+                                    <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">9个月</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">提前预警时间</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-3xl font-bold text-primary-600 dark:text-primary-400">42%</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">误报率降低</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 二、国有资产治理的智能化升级 -->
+        <section id="section2" class="mb-16 scroll-mt-20">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700 mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                    <i class="fa-solid fa-building text-primary-600 dark:text-primary-400 mr-3"></i>
+                    二、国有资产治理的智能化升级
+                </h2>
+                
+                <!-- 时空大数据分析 -->
+                <div class="mb-8 animate-fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary-100 dark:bg-primary-900/30 rounded-lg p-2 mr-3">
+                            <i class="fa-solid fa-map-location-dot text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 dark:text-white">时空大数据分析的资产配置优化</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                        <div class="lg:col-span-3 space-y-4">
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-2">技术实现</h4>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    利用卫星遥感数据、物联网传感器和城市三维建模，构建动态资产价值评估模型。浙江省某县通过"地企对应"系统，
+                                    实现2300宗工业用地与4000家企业的精准匹配，闲置资产盘活收益提升25%。
+                                </p>
+                            </div>
+                            
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                                <h4 class="font-medium text-gray-900 dark:text-white mb-2">数字孪生应用</h4>
+                                <p class="text-gray-600 dark:text-gray-400">
+                                    济南市城市更新平台集成倾斜摄影测量技术，对旧厂区改造进行50+次仿真推演，节约规划成本1800万元，
+                                    项目落地周期缩短40%。
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="lg:col-span-2 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-lg p-6 flex flex-col justify-between">
+                            <div class="mb-4">
+                                <h4 class="font-medium text-gray-900 dark:text-white text-center mb-3">资产优化成效</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center shadow-sm">
+                                        <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">2300</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">工业用地匹配</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center shadow-sm">
+                                        <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">25%</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">盘活收益提升</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center shadow-sm">
+                                        <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">1800万</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">节约规划成本</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center shadow-sm">
+                                        <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">40%</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">周期缩短</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center mr-3">
+                                        <i class="fa-solid fa-lightbulb text-white"></i>
+                                    </div>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        "数字孪生技术让规划决策从静态平面迈向动态模拟，实现了资产全生命周期价值最大化。"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 混改方案AI推演系统 -->
+                <div class="animate-fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary-100 dark:bg-primary-900/30 rounded-lg p-2 mr-3">
+                            <i class="fa-solid fa-robot text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 dark:text-white">混改方案AI推演系统</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">算法原理</h4>
+                            <p class="text-gray-600 dark:text-gray-400">
+                                蒙特卡洛模拟结合贝叶斯网络，输入股权结构、行业景气度等50+变量，输出资产价值波动区间。
+                                某开发区国企混改试点中，模型预测准确率达82%，避免潜在损失1.7亿元。
+                            </p>
+                            
+                            <div class="mt-5 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                                <h5 class="text-sm font-medium text-gray-900 dark:text-white mb-3">系统特点</h5>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center mr-2">
+                                            <i class="fa-solid fa-check text-primary-600 dark:text-primary-400"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">多变量输入</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center mr-2">
+                                            <i class="fa-solid fa-check text-primary-600 dark:text-primary-400"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">贝叶斯推理</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center mr-2">
+                                            <i class="fa-solid fa-check text-primary-600 dark:text-primary-400"></i>
+                                        </div>
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">价值区间预测</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-5 border border-gray-200 dark:border-gray-700 flex flex-col justify-center">
+                            <div class="flex flex-col items-center text-center mb-5">
+                                <div class="w-20 h-20 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center mb-3">
+                                    <i class="fa-solid fa-chart-line text-3xl text-white"></i>
+                                </div>
+                                <h4 class="text-xl font-bold text-gray-900 dark:text-white">模型预测准确率</h4>
+                                <div class="text-4xl font-bold text-primary-600 dark:text-primary-400 mt-2">82%</div>
+                            </div>
+                            
+                            <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 flex items-center">
+                                <div class="w-10 h-10 bg-red-100 dark:bg-red-800/50 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fa-solid fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">已避免潜在损失</div>
+                                    <div class="text-xl font-bold text-red-600 dark:text-red-400">1.7亿元</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 三、高净值群体管理的合规创新 -->
+        <section id="section3" class="mb-16 scroll-mt-20">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700 mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                    <i class="fa-solid fa-user-tie text-primary-600 dark:text-primary-400 mr-3"></i>
+                    三、高净值群体管理的合规创新
+                </h2>
+                
+                <!-- CRS数据解析 -->
+                <div class="mb-8 animate-fade-in">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary-100 dark:bg-primary-900/30 rounded-lg p-2 mr-3">
+                            <i class="fa-solid fa-globe text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-800 dark:text-white">CRS数据解析的行业标准</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5">
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-3">自动化申报</h4>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                                NLP技术解析OECD公布的89项申报规则，自动生成涵盖50+国家的资产清单。试点显示，
+                                跨境资产申报人工审核量减少2.3万次/年，合规效率提升300%。
+                            </p>
+                            
+                            <!-- OECD申报规则下拉列表 -->
+                            <div class="mt-4 mb-4 relative">
+                                <div class="dropdown-container relative">
+                                    <button id="oecd-dropdown-toggle" class="w-full px-4 py-2 text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 flex justify-between items-center text-sm">
+                                        <span class="text-gray-700 dark:text-gray-300">查看OECD申报规则示例</span>
+                                        <i class="fa-solid fa-chevron-down text-gray-500 dark:text-gray-400"></i>
+                                    </button>
+                                    
+                                    <div id="oecd-dropdown-menu" class="dropdown-menu w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+                                        <div class="p-2 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
+                                            <div class="relative">
+                                                <input type="text" id="rule-search" placeholder="搜索规则..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 dark:bg-gray-700 dark:text-white">
+                                                <i class="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                            </div>
+                                            <div class="flex flex-wrap gap-1 mt-2">
+                                                <button class="rule-filter px-2 py-1 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">全部</button>
+                                                <button class="rule-filter px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">金融账户</button>
+                                                <button class="rule-filter px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">实体报告</button>
+                                                <button class="rule-filter px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">尽职调查</button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="max-h-60 overflow-y-auto p-2">
+                                            <div class="space-y-2 rule-list">
+                                                <!-- 规则列表 - 部分规则示例 -->
+                                                <div class="rule-item p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md" data-category="金融账户">
+                                                    <div class="flex justify-between">
+                                                        <span class="text-xs font-medium text-gray-900 dark:text-white">规则 1: 应申报金融账户标准</span>
+                                                        <span class="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded">金融账户</span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                        包括存款账户、托管账户、股权或债权权益等，账户余额超过25万美元须申报。
+                                                    </p>
+                                                </div>
+                                                
+                                                <div class="rule-item p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md" data-category="尽职调查">
+                                                    <div class="flex justify-between">
+                                                        <span class="text-xs font-medium text-gray-900 dark:text-white">规则 2: 新账户尽职调查程序</span>
+                                                        <span class="text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded">尽职调查</span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                        金融机构须在新开户时获取账户持有人自证声明，确认税收居民身份。
+                                                    </p>
+                                                </div>
+                                                
+                                                <div class="rule-item p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md" data-category="实体报告">
+                                                    <div class="flex justify-between">
+                                                        <span class="text-xs font-medium text-gray-900 dark:text-white">规则 3: 实体控制人识别</span>
+                                                        <span class="text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded">实体报告</span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                        对于消极非金融实体，须识别和报告实际控制人信息，含名称、地址、居民国。
+                                                    </p>
+                                                </div>
+                                                
+                                                <div class="rule-item p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md" data-category="金融账户">
+                                                    <div class="flex justify-between">
+                <!-- 平台结论 -->
+                <div class="mt-8 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-primary-100 dark:border-primary-800/30 animate-fade-in">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">平台发展结论</h3>
+                    <p class="text-gray-700 dark:text-gray-300">
+                        该平台通过技术创新与场景化落地，已形成"数据治理-智能决策-价值创造"的政务数字化闭环，
+                        其模块化架构和隐私计算能力为三四线城市提供了可复制的数字化转型样板。
+                    </p>
+                    
+                    <div class="mt-5 flex justify-end">
+                        <button class="btn-hover inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-all duration-300">
+                            <i class="fa-solid fa-file-pdf mr-2"></i>
+                            下载完整技术白皮书
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">智政通政务智慧治理平台</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        通过数据驱动、智能决策和场景落地，为政务数字化转型提供全方位解决方案。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                            <i class="fa-brands fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                            <i class="fa-brands fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                            <i class="fa-brands fa-github text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">联系我们</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-envelope text-gray-400 mt-1 mr-3"></i>
+                            <span class="text-gray-600 dark:text-gray-400">contact@example.com</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-phone text-gray-400 mt-1 mr-3"></i>
+                            <span class="text-gray-600 dark:text-gray-400">+86 18452161868</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-location-dot text-gray-400 mt-1 mr-3"></i>
+                            <span class="text-gray-600 dark:text-gray-400">厦门润业珑华财税科技研究院有限公司</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">作者信息</h3>
+                    <div class="flex items-center mb-4">
+                        <img src="https://via.placeholder.com/60" alt="作者头像" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="text-gray-900 dark:text-white font-medium">数字治理研究团队</h4>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm">政务数字化转型专家</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <a href="#" class="text-primary-600 dark:text-primary-400 font-medium hover:underline mr-4">
+                            <i class="fa-brands fa-twitter mr-1"></i> @DigitalGovChina
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
+                <p class="text-gray-600 dark:text-gray-400">
+                    © 2023 智政通政务智慧治理平台. 保留所有权利.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" class="fixed bottom-6 right-6 z-50 p-2 bg-primary-600 text-white rounded-full shadow-lg hover:bg-primary-700 transition-all duration-300 focus:outline-none opacity-0 invisible">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <!-- Preline UI JS -->
+    <script src="https://cdn.jsdelivr.net/npm/preline/dist/preline.js"></script>
+    
+    <!-- 自定义脚本 -->
+    <script>
+        // 主题切换功能
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        
+        // 检查用户首选主题
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            htmlElement.classList.add('dark');
+        }
+        
+        // 检查本地存储的主题设置
+        if (localStorage.getItem('theme') === 'dark') {
+            htmlElement.classList.add('dark');
+        } else if (localStorage.getItem('theme') === 'light') {
+            htmlElement.classList.remove('dark');
+        }
+        
+        // 主题切换按钮点击事件
+        themeToggle.addEventListener('click', function() {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+        
+        // 移动端菜单
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // 移动端菜单项点击后关闭菜单
+        const mobileMenuItems = mobileMenu.querySelectorAll('a');
+        mobileMenuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+        
+        // 滚动时显示/隐藏返回顶部按钮
+        const backToTopButton = document.getElementById('back-to-top');
+        
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                backToTopButton.classList.remove('opacity-0', 'invisible');
+                backToTopButton.classList.add('opacity-100', 'visible');
+            } else {
+                backToTopButton.classList.remove('opacity-100', 'visible');
+                backToTopButton.classList.add('opacity-0', 'invisible');
+            }
+        });
+        
+        // 返回顶部按钮点击事件
+        backToTopButton.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // 平滑滚动到锚点
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // 添加滚动动画效果
+        const animateOnScroll = function() {
+            const elements = document.querySelectorAll('.animate-fade-in');
+            
+            elements.forEach(element => {
+                const position = element.getBoundingClientRect().top;
+                const screenHeight = window.innerHeight;
+                
+                if (position < screenHeight * 0.9) {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }
+            });
+        };
+        
+        // 初始化滚动动画
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.animate-fade-in').forEach(element => {
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px)';
+                element.style.transition = 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out';
+            });
+            
+            animateOnScroll();
+        });
+        
+        window.addEventListener('scroll', animateOnScroll);
+    </script>
+    
+    <!-- Chart.js CDN 用于图表 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 添加交互功能 -->
+    <script>
+        // 标签页切换功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 标签页切换
+            const tabs = document.querySelectorAll('.interactive-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // 移除所有tab的active类
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // 添加当前tab的active类
+                    this.classList.add('active');
+                    
+                    // 处理内容显示
+                    const contents = document.querySelectorAll('.tab-content');
+                    contents.forEach(content => content.classList.remove('active'));
+                    
+                    const activeContent = document.getElementById(`${targetTab}-content`);
+                    if (activeContent) {
+                        activeContent.classList.add('active');
+                    }
+                });
+            });
+            
+            // 手风琴效果
+            const accordionToggles = document.querySelectorAll('.accordion-toggle');
+            accordionToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const accordionItem = this.closest('.accordion-item');
+                    
+                    // 检查是否已经打开
+                    const isOpen = accordionItem.classList.contains('accordion-open');
+                    
+                    // 关闭所有手风琴
+                    document.querySelectorAll('.accordion-item').forEach(item => {
+                        item.classList.remove('accordion-open');
+                    });
+                    
+                    // 如果当前没有打开，则打开
+                    if (!isOpen) {
+                        accordionItem.classList.add('accordion-open');
+                    }
+                    
+                    // 阻止事件冒泡，防止点击内容时触发关闭
+                    event.stopPropagation();
+                });
+            });
+            
+            // 点击内容区域不会关闭手风琴
+            document.querySelectorAll('.accordion-content').forEach(content => {
+                content.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                });
+            });
+            
+            // 客户案例轮播
+            const cases = document.querySelectorAll('.case-slide');
+            const dots = document.querySelectorAll('.case-dot');
+            let currentCaseIndex = 0;
+            
+            // 下一个案例
+            const nextCase = document.querySelector('.case-next');
+            if (nextCase) {
+                nextCase.addEventListener('click', function() {
+                    showCase((currentCaseIndex + 1) % cases.length);
+                });
+            }
+            
+            // 上一个案例
+            const prevCase = document.querySelector('.case-prev');
+            if (prevCase) {
+                prevCase.addEventListener('click', function() {
+                    showCase((currentCaseIndex - 1 + cases.length) % cases.length);
+                });
+            }
+            
+            // 显示指定案例
+            function showCase(index) {
+                cases.forEach(slide => slide.classList.add('hidden'));
+                dots.forEach(dot => dot.classList.remove('bg-primary-600', 'dark:bg-primary-400'));
+                dots.forEach(dot => dot.classList.add('bg-gray-300', 'dark:bg-gray-600'));
+                
+                cases[index].classList.remove('hidden');
+                dots[index].classList.remove('bg-gray-300', 'dark:bg-gray-600');
+                dots[index].classList.add('bg-primary-600', 'dark:bg-primary-400');
+                
+                currentCaseIndex = index;
+            }
+            
+            // OECD申报规则下拉菜单
+            const oecdDropdownToggle = document.getElementById('oecd-dropdown-toggle');
+            const oecdDropdownMenu = document.getElementById('oecd-dropdown-menu');
+            if (oecdDropdownToggle && oecdDropdownMenu) {
+                const dropdownContainer = oecdDropdownToggle.closest('.dropdown-container');
+                
+                oecdDropdownToggle.addEventListener('click', function() {
+                    dropdownContainer.classList.toggle('dropdown-open');
+                });
+                
+                // 点击外部关闭
+                document.addEventListener('click', function(event) {
+                    if (!dropdownContainer.contains(event.target)) {
+                        dropdownContainer.classList.remove('dropdown-open');
+                    }
+                });
+                
+                // 规则筛选功能
+                const ruleFilters = document.querySelectorAll('.rule-filter');
+                const ruleItems = document.querySelectorAll('.rule-item');
+                const ruleSearch = document.getElementById('rule-search');
+                
+                ruleFilters.forEach(filter => {
+                    filter.addEventListener('click', function() {
+                        // 重置搜索框
+                        ruleSearch.value = '';
+                        
+                        // 移除所有filter的active状态
+                        ruleFilters.forEach(f => {
+                            f.classList.remove('bg-primary-100', 'dark:bg-primary-900/30', 'text-primary-700', 'dark:text-primary-300');
+                            f.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                        });
+                        
+                        // 设置当前filter的active状态
+                        this.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                        this.classList.add('bg-primary-100', 'dark:bg-primary-900/30', 'text-primary-700', 'dark:text-primary-300');
+                        
+                        // 获取分类
+                        const category = this.textContent.trim();
+                        
+                        // 过滤规则
+                        ruleItems.forEach(item => {
+                            if (category === '全部' || item.getAttribute('data-category') === category) {
+                                item.classList.remove('hidden');
+                            } else {
+                                item.classList.add('hidden');
+                            }
+                        });
+                    });
+                });
+                
+                // 规则搜索功能
+                if (ruleSearch) {
+                    ruleSearch.addEventListener('input', function() {
+                        const searchText = this.value.toLowerCase();
+                        
+                        ruleItems.forEach(item => {
+                            const itemText = item.textContent.toLowerCase();
+                            if (itemText.includes(searchText)) {
+                                item.classList.remove('hidden');
+                            } else {
+                                item.classList.add('hidden');
+                            }
+                        });
+                        
+                        // 重置filter的active状态
+                        ruleFilters.forEach(f => {
+                            f.classList.remove('bg-primary-100', 'dark:bg-primary-900/30', 'text-primary-700', 'dark:text-primary-300');
+                            f.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                        });
+                        ruleFilters[0].classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                        ruleFilters[0].classList.add('bg-primary-100', 'dark:bg-primary-900/30', 'text-primary-700', 'dark:text-primary-300');
+                    });
+                }
+            }
+            
+            // 数据源分布图表
+            const dataSourceChart = document.getElementById('dataSourceChart');
+            if (dataSourceChart) {
+                const ctx = dataSourceChart.getContext('2d');
+                if (ctx) {
+                    const chart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['工商', '税务', '金融', '海关', '其他'],
+                            datasets: [{
+                                data: [24, 38, 18, 12, 8],
+                                backgroundColor: [
+                                    '#3b82f6', // blue-500
+                                    '#22c55e', // green-500
+                                    '#eab308', // yellow-500
+                                    '#a855f7', // purple-500
+                                    '#6b7280', // gray-500
+                                ],
+                                borderWidth: 0,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false,
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.label}: ${context.raw}%`;
+                                        }
+                                    }
+                                }
+                            },
+                            cutout: '65%'
+                        }
+                    });
+                    
+                    // 处理深色模式切换时更新图表
+                    document.getElementById('theme-toggle').addEventListener('click', function() {
+                        setTimeout(function() {
+                            chart.update();
+                        }, 300);
+                    });
+                }
+            }
+            
+            // 企业关联分析工具演示
+            const demoCompanies = document.querySelectorAll('.text-xs.text-primary-600.dark:text-primary-400.hover\\:underline');
+            const demoArea = document.querySelector('.bg-gray-100.dark:bg-gray-700.rounded-lg.h-40');
+            
+            demoCompanies.forEach(company => {
+                company.addEventListener('click', function() {
+                    const companyName = this.textContent.trim();
+                    
+                    // 简易演示网络图 (实际应用中会用D3.js等库)
+                    demoArea.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center">
+                            <div class="relative w-full max-w-xs">
+                                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary-600 dark:bg-primary-500 text-white text-xs px-2 py-1 rounded-lg z-20">
+                                    ${companyName}
+                                </div>
+                                <div class="absolute left-[30%] top-[20%] bg-blue-500 dark:bg-blue-600 text-white text-xs px-2 py-1 rounded-lg z-10">
+                                    关联公司A
+                                </div>
+                                <div class="absolute left-[70%] top-[30%] bg-green-500 dark:bg-green-600 text-white text-xs px-2 py-1 rounded-lg z-10">
+                                    关联公司B
+                                </div>
+                                <div class="absolute left-[25%] top-[70%] bg-yellow-500 dark:bg-yellow-600 text-white text-xs px-2 py-1 rounded-lg z-10">
+                                    法人代表
+                                </div>
+                                <div class="absolute left-[65%] top-[65%] bg-purple-500 dark:bg-purple-600 text-white text-xs px-2 py-1 rounded-lg z-10">
+                                    海外实体
+                                </div>
+                                <!-- 连接线 -->
+                                <svg class="absolute inset-0 w-full h-full">
+                                    <line x1="50%" y1="50%" x2="30%" y2="20%" stroke="rgba(59, 130, 246, 0.5)" stroke-width="2" />
+                                    <line x1="50%" y1="50%" x2="70%" y2="30%" stroke="rgba(16, 185, 129, 0.5)" stroke-width="2" />
+                                    <line x1="50%" y1="50%" x2="25%" y2="70%" stroke="rgba(245, 158, 11, 0.5)" stroke-width="2" />
+                                    <line x1="50%" y1="50%" x2="65%" y2="65%" stroke="rgba(139, 92, 246, 0.5)" stroke-width="2" />
+                                </svg>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
